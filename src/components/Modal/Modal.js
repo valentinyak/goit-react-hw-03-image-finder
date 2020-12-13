@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import s from './Modal.module.css';
 
 export default function Modal({ largeImg, onClick }) {
@@ -10,3 +11,8 @@ export default function Modal({ largeImg, onClick }) {
     </div>
   );
 }
+
+Modal.propTypes = {
+  largeImg: PropTypes.string,
+  onClick: PropTypes.func,
+};

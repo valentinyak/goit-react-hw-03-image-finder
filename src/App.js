@@ -21,14 +21,22 @@ export default class App extends Component {
     status: 'idle',
     showModal: false,
     openedImg: null,
+    totalImages: 0,
   };
 
   componentDidUpdate(prevProps, prevState) {
-    if (this.state.serchQuery !== prevState.serchQuery) {
+    const { serchQuery, images, status } = this.state;
+
+    if (serchQuery !== prevState.serchQuery) {
       this.setState({ currentPage: 1, images: [], status: 'pending' });
       setTimeout(() => {
         this.makeFetch();
       });
+    }
+
+    if (images.length === 0 && status === 'resolved') {
+      toast.info('По вашему запросу ничего не найдено');
+      this.setState({ status: 'idle' });
     }
   }
 
@@ -72,6 +80,7 @@ export default class App extends Component {
             images: [...state.images, ...parsedResponse.hits],
             currentPage: state.currentPage + 1,
             status: 'resolved',
+            totalImages: parsedResponse.total,
           };
         });
       })
@@ -79,40 +88,33 @@ export default class App extends Component {
   }
 
   render() {
+    const {
+      handleFormSubmit,
+      state,
+      handleImgClick,
+      handleBtnClick,
+      handleOverleyClick,
+    } = this;
+    const { images, status, totalImages, error, showModal, openedImg } = state;
+
     return (
       <div className={s.App}>
         <ToastContainer autoClose={3000} />
-        <Searchbar onSubmit={this.handleFormSubmit} />
-        <ImageGallery
-          images={this.state.images}
-          onClick={this.handleImgClick}
-        />
-        {this.state.status === 'pending' ? (
+        <Searchbar onSubmit={handleFormSubmit} />
+        <ImageGallery images={images} onClick={handleImgClick} />
+
+        {status === 'pending' && (
           <Loader type="ThreeDots" color="#00BFFF" height={100} width={100} />
-        ) : (
-          <></>
-        )}
-        {this.state.images.length > 0 ? (
-          <Button onClick={this.handleBtnClick} />
-        ) : (
-          <></>
         )}
 
-        {this.state.images.length === 0 && this.state.status === 'resolved' ? (
-          toast.info('По вашему запросу ничего не найдено')
-        ) : (
-          <></>
+        {images.length > 0 && images.length < totalImages && (
+          <Button onClick={handleBtnClick} />
         )}
-        {this.state.status === 'rejected' ? (
-          <div>{this.state.error}</div>
-        ) : (
-          <></>
-        )}
-        {this.state.showModal && (
-          <Modal
-            largeImg={this.state.openedImg}
-            onClick={this.handleOverleyClick}
-          />
+
+        {status === 'rejected' && <div>{error}</div>}
+
+        {showModal && (
+          <Modal largeImg={openedImg} onClick={handleOverleyClick} />
         )}
       </div>
     );
